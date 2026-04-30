@@ -1,83 +1,96 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import educationImg from './assets/education.png';
 import studySvg from './assets/study.svg';
 import Dashboard from './components/Dashboard';
+import {
+  Box, TextField, Button, Typography, InputAdornment, IconButton,
+  Alert, Paper, CircularProgress, ThemeProvider, createTheme, CssBaseline
+} from '@mui/material';
+import { Visibility, VisibilityOff, Phone, Lock } from '@mui/icons-material';
 
-const SchoolIcon = ({ className }) => (
-// ... icons stay same
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M14 22v-4a2 2 0 1 0-4 0v4"/>
-    <path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/>
-    <path d="M18 5v17"/>
-    <path d="m4 6 8-4 8 4"/>
-    <path d="M6 5v17"/>
-    <circle cx="12" cy="9" r="2"/>
-  </svg>
-);
-
-const EyeIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z"/>
-    <circle cx="12" cy="12" r="3"/>
-  </svg>
-);
-
-const EyeOffIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
-    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-    <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
-    <line x1="2" x2="22" y1="2" y2="22"/>
-  </svg>
-);
-
-const ArrowLeftIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-  </svg>
-);
+const theme = createTheme({
+  palette: {
+    primary: { main: '#1e2a4a' },
+    secondary: { main: '#7c4dff' },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: { borderRadius: 12 },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 700,
+          fontSize: '1rem',
+          padding: '12px 24px',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: '#f8f9fc',
+            borderRadius: 12,
+          },
+        },
+      },
+    },
+  },
+});
 
 function App() {
-  const [step, setStep] = useState(() => {
-    return localStorage.getItem('isAuth') === 'true' ? 3 : 1;
+  const [isAuth, setIsAuth] = useState(() => localStorage.getItem('isAuth') === 'true');
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
-  const [serverOtp, setServerOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const formatPhone = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 9);
+    let formatted = '';
+    if (digits.length > 0) formatted += digits.slice(0, 2);
+    if (digits.length > 2) formatted += ' ' + digits.slice(2, 5);
+    if (digits.length > 5) formatted += ' ' + digits.slice(5, 7);
+    if (digits.length > 7) formatted += ' ' + digits.slice(7, 9);
+    return formatted;
+  };
+
+  const getRawPhone = () => '998' + phone.replace(/\s/g, '');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('/_/backend/auth/login', { login: email, password });
-      if (res.data.success) {
-        setServerOtp(res.data.otp);
-        setStep(2);
+      // Backend-siz kirish uchun superadmin (mock login)
+      if (getRawPhone() === '998998888888' && password === 'admin') {
+        const mockUser = { login: '998998888888', role: 'SUPERADMIN', email: 'superadmin@crm.com' };
+        localStorage.setItem('isAuth', 'true');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        setIsAuth(true);
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Email yoki parol noto\'g\'ri');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const res = await axios.post('/_/backend/auth/verify', { login: email, code });
+      const res = await axios.post('/_/backend/auth/login', { login: getRawPhone(), password });
       if (res.data.success) {
         localStorage.setItem('isAuth', 'true');
-        setStep(3);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        setIsAuth(true);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Tasdiqlash kodi noto\'g\'ri');
+      setError(err.response?.data?.message || 'Telefon raqam yoki parol noto\'g\'ri');
     } finally {
       setLoading(false);
     }
@@ -85,147 +98,196 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('isAuth');
-    setStep(1);
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuth(false);
   };
 
-  if (step === 3) {
-    return <Dashboard onLogout={handleLogout} userEmail={email} />;
+  if (isAuth) {
+    if (user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') {
+      return (
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Dashboard onLogout={handleLogout} userEmail={user?.email} />
+        </ThemeProvider>
+      );
+    } else {
+      return (
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#f8f9fc', p: 4 }}>
+            <Paper elevation={0} sx={{ p: 6, borderRadius: 4, textAlign: 'center', maxWidth: 400, border: '1px solid #e5e7eb' }}>
+              <Box sx={{ width: 80, height: 80, bgcolor: '#fef3c7', color: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </Box>
+              <Typography variant="h5" fontWeight={700} color="primary" gutterBottom>Kirish cheklangan</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Sizning rolingiz (<strong>{user?.role}</strong>) uchun panel hali tayyor emas.
+              </Typography>
+              <Button fullWidth variant="contained" onClick={handleLogout} sx={{ borderRadius: 3 }}>Chiqish</Button>
+            </Paper>
+          </Box>
+        </ThemeProvider>
+      );
+    }
   }
 
   return (
-    <div className="flex min-h-screen w-full font-sans bg-gray-50">
-      <div className="hidden lg:flex lg:w-1/2 bg-[#1e2a4a] items-center justify-center p-6 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-10 left-10 w-48 h-48 border-4 border-white rounded-full"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 border-8 border-white rounded-full"></div>
-        </div>
-        
-        <div className="w-full max-w-2xl z-10 p-4">
-          <img 
-            src={studySvg} 
-            alt="Study Illustration" 
-            className="w-full h-auto drop-shadow-2xl animate-pulse-slow scale-110"
-          />
-        </div>
-      </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+        {/* Left side - Illustration */}
+        <Box sx={{
+          display: { xs: 'none', lg: 'flex' },
+          width: '50%',
+          bgcolor: '#1e2a4a',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 6,
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.08 }}>
+            <Box sx={{ position: 'absolute', top: 40, left: 40, width: 200, height: 200, border: '4px solid white', borderRadius: '50%' }} />
+            <Box sx={{ position: 'absolute', bottom: 80, right: 80, width: 320, height: 320, border: '8px solid white', borderRadius: '50%' }} />
+            <Box sx={{ position: 'absolute', top: '50%', left: '20%', width: 120, height: 120, border: '3px solid white', borderRadius: 4, transform: 'rotate(45deg)' }} />
+          </Box>
 
-      <div className="w-full lg:w-1/2 bg-white flex flex-col items-center justify-center p-8 md:p-16 relative">
-        <div className="w-full max-w-md space-y-8">
-          
-          {step === 2 && (
-            <button 
-              onClick={() => setStep(1)}
-              className="absolute top-8 left-8 flex items-center text-gray-500 hover:text-[#1e2a4a] transition-colors"
-            >
-              <ArrowLeftIcon className="w-5 h-5 mr-2" />
-              Orqaga
-            </button>
-          )}
+          <Box sx={{ width: '100%', maxWidth: 500, zIndex: 10, textAlign: 'center' }}>
+            <Box
+              component="img"
+              src={studySvg}
+              alt="Education"
+              sx={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: 420,
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
+              }}
+            />
+            <Typography variant="h5" sx={{ color: 'white', fontWeight: 800, mt: 4, letterSpacing: -0.5 }}>
+              CRM<span style={{ color: '#7c4dff' }}>SYS</span>
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 1 }}>
+              O'quv markazi boshqaruv tizimi
+            </Typography>
+          </Box>
+        </Box>
 
-          <div className="flex flex-col items-center space-y-6">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-lg">
-              <SchoolIcon className="w-10 h-10 text-[#1e2a4a]" />
-            </div>
+        {/* Right side - Login Form */}
+        <Box sx={{
+          width: { xs: '100%', lg: '50%' },
+          bgcolor: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: { xs: 3, md: 8 },
+          position: 'relative',
+        }}>
+          <Box sx={{ width: '100%', maxWidth: 420 }}>
             
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-[#1e2a4a] tracking-tight">
-                {step === 1 ? 'LEARNING MANAGEMENT SYSTEM' : 'KODNI TASDIQLASH'}
-              </h1>
-              <p className="text-sm text-gray-500 mt-2">
-                {step === 1 ? 'Tizimga kirish uchun ma\'lumotlaringizni kiriting' : 'Emailingizga yuborilgan 6 xonali kodni kiriting'}
-              </p>
-              {step === 2 && serverOtp && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 font-medium animate-pulse">
-                  Test kodi: <span className="text-lg font-bold tracking-widest">{serverOtp}</span>
-                </div>
-              )}
-            </div>
-          </div>
+            {/* Logo */}
+            <Box sx={{ textAlign: 'center', mb: 5 }}>
+              <Box sx={{
+                width: 72, height: 72, mx: 'auto', mb: 3,
+                borderRadius: 3, overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(30,42,74,0.12)',
+                border: '2px solid #f0f0f5',
+              }}>
+                <Box component="img" src={educationImg} alt="Logo" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#1e2a4a', letterSpacing: -0.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+                LEARNING MANAGEMENT SYSTEM
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                Tizimga kirish uchun ma'lumotlaringizni kiriting
+              </Typography>
+            </Box>
 
-          {error && (
-            <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm animate-shake">
-              {error}
-            </div>
-          )}
+            {/* Error */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }} onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
 
-          {step === 1 ? (
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-gray-600">Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e2a4a] outline-none transition-all"
-                    placeholder="Emailni kiriting"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-gray-600">Parol</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e2a4a] outline-none transition-all"
-                      placeholder="Parolni kiriting"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    >
-                      {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#1e2a4a] text-white font-bold rounded-lg hover:bg-[#2c3e6d] transition-all disabled:opacity-50"
-              >
-                {loading ? 'Yuklanmoqda...' : 'Kirish'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerify} className="space-y-6">
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-gray-600">Tasdiqlash kodi</label>
-                <input
-                  type="text"
+            {/* Form */}
+            <form onSubmit={handleLogin}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <TextField
+                  fullWidth
+                  label="Telefon raqam"
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="99 123 45 67"
                   required
-                  maxLength="6"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-4 py-4 text-center text-2xl tracking-[1em] font-bold bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1e2a4a] outline-none transition-all"
-                  placeholder="000000"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone sx={{ color: '#7c4dff', mr: 0.5 }} />
+                        <Typography sx={{ fontWeight: 700, color: '#1e2a4a', fontSize: 14 }}>+998</Typography>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { fontSize: '1.1rem', letterSpacing: '0.15em' },
+                  }}
                 />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#1e2a4a] text-white font-bold rounded-lg hover:bg-[#2c3e6d] transition-all disabled:opacity-50"
-              >
-                {loading ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
-              </button>
-              <p className="text-center text-sm text-gray-500">
-                Kod kelmadimi? <button type="button" onClick={handleLogin} className="text-[#1e2a4a] font-bold hover:underline">Qaytadan yuborish</button>
-              </p>
-            </form>
-          )}
-        </div>
 
-        <div className="absolute bottom-8 text-center w-full px-8">
-          <p className="text-xs text-gray-400">
+                <TextField
+                  fullWidth
+                  label="Parol"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Parolni kiriting"
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock sx={{ color: '#7c4dff' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={loading}
+                  sx={{
+                    mt: 1,
+                    py: 1.5,
+                    borderRadius: 3,
+                    bgcolor: '#1e2a4a',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 14px rgba(30,42,74,0.3)',
+                    '&:hover': { bgcolor: '#2c3e6d', boxShadow: '0 6px 20px rgba(30,42,74,0.4)' },
+                  }}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Kirish'}
+                </Button>
+              </Box>
+            </form>
+          </Box>
+
+          {/* Footer */}
+          <Typography variant="caption" sx={{ position: 'absolute', bottom: 24, color: 'text.disabled' }}>
             Copyright © {new Date().getFullYear()} CRM System. Barcha huquqlar himoyalangan.
-          </p>
-        </div>
-      </div>
-    </div>
+          </Typography>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 
