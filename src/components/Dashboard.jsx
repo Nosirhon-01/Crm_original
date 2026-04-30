@@ -53,15 +53,7 @@ const branches = [
 ];
 
 const roomsData = [
-  { id: 1, name: 'genious room', capacity: 15 },
-  { id: 2, name: 'Impact room', capacity: 12 },
-  { id: 3, name: '1A', capacity: 25 },
-  { id: 4, name: '205-xona', capacity: 32 },
-  { id: 5, name: '16-xona', capacity: 18 },
-  { id: 6, name: '5 xona', capacity: 30 },
-  { id: 7, name: 'IELTS with Islombek', capacity: 20 },
-  { id: 8, name: 'Beginner', capacity: 18 },
-  { id: 9, name: '99', capacity: 25 },
+  { id: 1, name: 'AUTODESK', capacity: 18 },
 ];
 
 const Dashboard = ({ onLogout, userEmail }) => {
