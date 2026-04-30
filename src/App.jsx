@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import educationImg from './assets/education.png';
 import studySvg from './assets/study.svg';
 import Dashboard from './components/Dashboard';
+import { authService } from './services/auth.service';
 import {
   Box, TextField, Button, Typography, InputAdornment, IconButton,
   Alert, Paper, CircularProgress, ThemeProvider, createTheme, CssBaseline
@@ -43,7 +43,29 @@ const theme = createTheme({
   },
 });
 
-function Login({ onLogin, error, setError, loading, setLoading, email, setEmail, password, setPassword, showPassword, setShowPassword }) {
+function Login({
+  onLogin,
+  onRegister,
+  isRegisterMode,
+  setIsRegisterMode,
+  error,
+  setError,
+  loading,
+  email,
+  setEmail,
+  password,
+  setPassword,
+  showPassword,
+  setShowPassword,
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
+  phone,
+  setPhone,
+  address,
+  setAddress,
+}) {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
       <Box sx={{
@@ -108,7 +130,9 @@ function Login({ onLogin, error, setError, loading, setLoading, email, setEmail,
               LEARNING MANAGEMENT SYSTEM
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-              Tizimga kirish uchun ma'lumotlaringizni kiriting
+              {isRegisterMode
+                ? "Oddiy ro'yxatdan o'tish formasini to'ldiring"
+                : "Tizimga kirish uchun ma'lumotlaringizni kiriting"}
             </Typography>
           </Box>
 
@@ -118,8 +142,40 @@ function Login({ onLogin, error, setError, loading, setLoading, email, setEmail,
             </Alert>
           )}
 
-          <form onSubmit={onLogin}>
+          <form onSubmit={isRegisterMode ? onRegister : onLogin}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {isRegisterMode && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Ism"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Familiya"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Telefon"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+998901234567"
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Manzil"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </>
+              )}
+
               <TextField
                 fullWidth
                 label="Email"
@@ -176,7 +232,21 @@ function Login({ onLogin, error, setError, loading, setLoading, email, setEmail,
                   '&:hover': { bgcolor: '#2c3e6d', boxShadow: '0 6px 20px rgba(30,42,74,0.4)' },
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Kirish'}
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : isRegisterMode ? "Ro'yxatdan o'tish" : 'Kirish'}
+              </Button>
+
+              <Button
+                type="button"
+                fullWidth
+                variant="text"
+                onClick={() => {
+                  setError('');
+                  setIsRegisterMode(!isRegisterMode);
+                }}
+              >
+                {isRegisterMode ? 'Loginga qaytish' : "Ro'yxatdan o'tish"}
               </Button>
             </Box>
           </form>
@@ -216,6 +286,11 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -224,37 +299,53 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      if (email === 'saloxiddinsirojov99@gmail.com' && password === 'admin123!') {
-        const mockUser = { email: 'saloxiddinsirojov99@gmail.com', role: 'SUPERADMIN' };
-        localStorage.setItem('isAuth', 'true');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        setIsAuth(true);
-        setLoading(false);
-        return;
-      }
-
-      const res = await axios.post('/_/backend/auth/login', { login: email, password });
-      if (res.data.success) {
-        localStorage.setItem('isAuth', 'true');
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-        localStorage.setItem('token', res.data.accessToken);
-        setUser(res.data.user);
-        setIsAuth(true);
-      }
+      const response = await authService.login(email, password);
+      
+      // Token va user ma'lumotlarini saqlash
+      localStorage.setItem('isAuth', 'true');
+      
+      // Backend user ma'lumotlarini set qilish
+      const userData = response.user || { email: email, role: response.role };
+      setUser(userData);
+      setIsAuth(true);
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Email yoki parol noto\'g\'ri');
+      const errorMessage = err?.message || err?.error || 'Email yoki parol noto\'g\'ri';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
+    authService.logout();
     localStorage.removeItem('isAuth');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
     setUser(null);
     setIsAuth(false);
+  };
+
+  const handleRegister = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await authService.register({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone,
+        address,
+        password,
+      });
+      setIsRegisterMode(false);
+      setError("Ro'yxatdan o'tdingiz. Endi login qiling.");
+      setPassword('');
+    } catch (err) {
+      const errorMessage = err?.message || err?.error || "Ro'yxatdan o'tishda xatolik";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -266,11 +357,18 @@ function App() {
             isAuth ? <Navigate to="/dashboard" replace /> : 
             <Login 
               onLogin={handleLogin} 
+              onRegister={handleRegister}
+              isRegisterMode={isRegisterMode}
+              setIsRegisterMode={setIsRegisterMode}
               error={error} setError={setError}
-              loading={loading} setLoading={setLoading}
+              loading={loading}
               email={email} setEmail={setEmail}
               password={password} setPassword={setPassword}
               showPassword={showPassword} setShowPassword={setShowPassword}
+              firstName={firstName} setFirstName={setFirstName}
+              lastName={lastName} setLastName={setLastName}
+              phone={phone} setPhone={setPhone}
+              address={address} setAddress={setAddress}
             />
           } />
           
