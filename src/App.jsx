@@ -7,7 +7,7 @@ import {
   Box, TextField, Button, Typography, InputAdornment, IconButton,
   Alert, Paper, CircularProgress, ThemeProvider, createTheme, CssBaseline
 } from '@mui/material';
-import { Visibility, VisibilityOff, Phone, Lock } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email, Lock } from '@mui/icons-material';
 
 const theme = createTheme({
   palette: {
@@ -49,22 +49,12 @@ function App() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const formatPhone = (value) => {
-    const digits = value.replace(/\D/g, '').slice(0, 9);
-    let formatted = '';
-    if (digits.length > 0) formatted += digits.slice(0, 2);
-    if (digits.length > 2) formatted += ' ' + digits.slice(2, 5);
-    if (digits.length > 5) formatted += ' ' + digits.slice(5, 7);
-    if (digits.length > 7) formatted += ' ' + digits.slice(7, 9);
-    return formatted;
-  };
 
-  const getRawPhone = () => '998' + phone.replace(/\s/g, '');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -72,8 +62,8 @@ function App() {
     setError('');
     try {
       // Backend-siz kirish uchun superadmin (mock login)
-      if (getRawPhone() === '998998888888' && password === 'admin') {
-        const mockUser = { login: '998998888888', role: 'SUPERADMIN', email: 'superadmin@crm.com' };
+      if (email === 'saloxiddinsirojov99@gmail.com' && password === 'admin123!') {
+        const mockUser = { email: 'saloxiddinsirojov99@gmail.com', role: 'SUPERADMIN' };
         localStorage.setItem('isAuth', 'true');
         localStorage.setItem('user', JSON.stringify(mockUser));
         setUser(mockUser);
@@ -82,7 +72,7 @@ function App() {
         return;
       }
 
-      const res = await axios.post('/_/backend/auth/login', { login: getRawPhone(), password });
+      const res = await axios.post('/_/backend/auth/login', { login: email, password });
       if (res.data.success) {
         localStorage.setItem('isAuth', 'true');
         localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -90,7 +80,7 @@ function App() {
         setIsAuth(true);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Telefon raqam yoki parol noto\'g\'ri');
+      setError(err.response?.data?.message || 'Email yoki parol noto\'g\'ri');
     } finally {
       setLoading(false);
     }
@@ -218,21 +208,18 @@ function App() {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 <TextField
                   fullWidth
-                  label="Telefon raqam"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder="99 123 45 67"
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@gmail.com"
                   required
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Phone sx={{ color: '#7c4dff', mr: 0.5 }} />
-                        <Typography sx={{ fontWeight: 700, color: '#1e2a4a', fontSize: 14 }}>+998</Typography>
+                        <Email sx={{ color: '#7c4dff', mr: 0.5 }} />
                       </InputAdornment>
                     ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': { fontSize: '1.1rem', letterSpacing: '0.15em' },
                   }}
                 />
 
