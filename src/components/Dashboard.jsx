@@ -68,6 +68,32 @@ const Dashboard = ({ onLogout, userEmail }) => {
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = React.useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [rooms, setRooms] = useState(roomsData);
+  const [newRoom, setNewRoom] = useState({ name: '', capacity: '' });
+
+  const handleAddRoom = async () => {
+    if (!newRoom.name || !newRoom.capacity) return;
+    try {
+      const res = await axios.post('/_/backend/rooms', { 
+        name: newRoom.name, 
+        capacity: parseInt(newRoom.capacity) 
+      });
+      if (res.data) {
+        setRooms([...rooms, res.data]);
+        setShowAddRoomSidebar(false);
+        setNewRoom({ name: '', capacity: '' });
+      }
+    } catch (err) {
+      // Mock mode fallback
+      const mockNewRoom = { 
+        id: Date.now(), 
+        name: newRoom.name, 
+        capacity: parseInt(newRoom.capacity) 
+      };
+      setRooms([...rooms, mockNewRoom]);
+      setShowAddRoomSidebar(false);
+      setNewRoom({ name: '', capacity: '' });
+    }
+  };
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -479,6 +505,8 @@ const Dashboard = ({ onLogout, userEmail }) => {
             <input 
               type="text" 
               placeholder="Xona nomi" 
+              value={newRoom.name}
+              onChange={(e) => setNewRoom({...newRoom, name: e.target.value})}
               className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-[14px] ${isDarkMode ? 'bg-[#0f172a] border-gray-700 text-white focus:border-indigo-500' : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} 
             />
           </div>
@@ -487,8 +515,10 @@ const Dashboard = ({ onLogout, userEmail }) => {
               Sig'imi <span className="text-red-500">*</span>
             </label>
             <input 
-              type="text" 
+              type="number" 
               placeholder="Masalan: 20" 
+              value={newRoom.capacity}
+              onChange={(e) => setNewRoom({...newRoom, capacity: e.target.value})}
               className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-[14px] ${isDarkMode ? 'bg-[#0f172a] border-gray-700 text-white focus:border-indigo-500' : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} 
             />
           </div>
@@ -502,6 +532,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
             Bekor qilish
           </button>
           <button 
+            onClick={handleAddRoom}
             className="px-6 py-2.5 bg-[#7c4dff] text-white rounded-xl font-bold text-[13px] hover:bg-indigo-600 transition-all active:scale-95 shadow-md shadow-indigo-200 dark:shadow-none"
           >
             Saqlash
