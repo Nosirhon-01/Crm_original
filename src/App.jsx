@@ -78,10 +78,13 @@ function Login({
         position: 'relative',
         overflow: 'hidden',
       }}>
-        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.08 }}>
-          <Box sx={{ position: 'absolute', top: 40, left: 40, width: 200, height: 200, border: '4px solid white', borderRadius: '50%' }} />
-          <Box sx={{ position: 'absolute', bottom: 80, right: 80, width: 320, height: 320, border: '8px solid white', borderRadius: '50%' }} />
-          <Box sx={{ position: 'absolute', top: '50%', left: '20%', width: 120, height: 120, border: '3px solid white', borderRadius: 4, transform: 'rotate(45deg)' }} />
+        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0 }}>
+          {/* Modern abstract glowing orbs */}
+          <Box sx={{ position: 'absolute', top: '-10%', left: '-10%', width: '350px', height: '350px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,77,255,0.35) 0%, rgba(124,77,255,0) 70%)', filter: 'blur(40px)', animation: 'blob 12s infinite alternate ease-in-out', '@keyframes blob': { '0%': { transform: 'translate(0, 0) scale(1)' }, '100%': { transform: 'translate(50px, 100px) scale(1.3)' } } }} />
+          <Box sx={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(100,181,246,0.3) 0%, rgba(100,181,246,0) 70%)', filter: 'blur(50px)', animation: 'blob-reverse 10s infinite alternate ease-in-out', '@keyframes blob-reverse': { '0%': { transform: 'translate(0, 0) scale(1.2)' }, '100%': { transform: 'translate(-80px, -60px) scale(1)' } } }} />
+          
+          {/* subtle tech dot grid */}
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 1.5px, transparent 1.5px)', backgroundSize: '35px 35px', opacity: 0.8 }} />
         </Box>
 
         <Box sx={{ width: '100%', maxWidth: 500, zIndex: 10, textAlign: 'center' }}>
@@ -95,10 +98,16 @@ function Login({
               maxHeight: 420,
               objectFit: 'contain',
               filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
+              animation: 'float 6s ease-in-out infinite',
+              '@keyframes float': {
+                '0%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-20px)' },
+                '100%': { transform: 'translateY(0px)' },
+              }
             }}
           />
           <Typography variant="h5" sx={{ color: 'white', fontWeight: 800, mt: 4, letterSpacing: -0.5 }}>
-            CRM<span style={{ color: '#7c4dff' }}>SYS</span>
+            NAJOT<span style={{ color: '#7c4dff' }}>COIN</span>
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 1 }}>
             O'quv markazi boshqaruv tizimi

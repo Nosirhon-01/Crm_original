@@ -152,7 +152,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
               <img src={educationImg} alt="Logo" className="w-full h-full object-cover rounded-lg bg-[#f8f9fc]" />
             </div>
             <span className={`text-2xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-[#1e2a4a]'}`}>
-              CRM<span className="text-[#7c4dff]">SYS</span>
+              NAJOT<span className="text-[#7c4dff]">COIN</span>
             </span>
           </div>
         </div>
